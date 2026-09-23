@@ -3,30 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Page Exporter</title>
+    <title>PDF Page Exporter Pro</title>
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Core Functionality Libraries -->
     <!-- PDF.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- JSZip for packaging multiple images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- FileSaver for triggering the zip download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            900: '#1e3a8a',
+                            50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6',
+                            600: '#2563eb', 900: '#1e3a8a',
                         }
                     }
                 }
@@ -45,7 +47,6 @@
             color: #f8fafc;
             min-height: 100vh;
         }
-
         .glass-panel {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
@@ -53,181 +54,162 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
-
         .glass-input {
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
             transition: all 0.3s ease;
         }
-
         .glass-input:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
             background: rgba(15, 23, 42, 0.8);
         }
-
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.5);
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: rgba(71, 85, 105, 0.8);
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: rgba(100, 116, 139, 1);
-        }
-
-        /* Drag & Drop visual feedback */
-        .drag-over {
-            border-color: #3b82f6 !important;
-            background: rgba(59, 130, 246, 0.1) !important;
-        }
-
-        /* Loading Spinner */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(71, 85, 105, 0.8); border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 1); }
+        .drag-over { border-color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1) !important; }
         .spinner {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-left-color: #ffffff;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            border: 3px solid rgba(255,255,255,0.1); border-left-color: #ffffff;
+            border-radius: 50%; width: 18px; height: 18px;
             animation: spin 1s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-6 lg:p-8">
 
-    <div class="max-w-6xl mx-auto">
-        <!-- Header -->
-        <header class="mb-8 text-center md:text-left">
-            <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
-                PDF Page Exporter
-            </h1>
-            <p class="text-slate-400">Convierte y renombra fácilmente las páginas de tu PDF a imágenes.</p>
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+                <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-2">
+                    PDF to Image Pro
+                </h1>
+                <p class="text-slate-400 text-sm md:text-base">Convierte múltiples PDFs. Tus configuraciones se guardan automáticamente.</p>
+            </div>
+            <button id="clear-all-btn" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium">
+                <i class="ph ph-trash"></i> Limpiar Todo
+            </button>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             
-            <!-- Left Column: Configuration -->
-            <div class="lg:col-span-4 space-y-6">
+            <div class="lg:col-span-4 flex flex-col gap-6">
                 
                 <!-- File Upload Panel -->
-                <div class="glass-panel rounded-2xl p-6">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                        <i class="ph ph-file-pdf text-blue-400"></i> Archivo
-                    </h2>
-                    
-                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-500/5 transition-all duration-300">
-                        <i class="ph ph-upload-simple text-4xl text-slate-400 mb-3 block"></i>
-                        <p class="text-sm text-slate-300 font-medium mb-1">Haz clic o arrastra tu PDF aquí</p>
-                        <p class="text-xs text-slate-500">Solo archivos .pdf</p>
-                        <input type="file" id="pdf-upload" accept=".pdf" class="hidden">
+                <div class="glass-panel rounded-2xl p-5 md:p-6 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold flex items-center gap-2">
+                            <i class="ph ph-files text-blue-400 text-xl"></i> Archivos PDF
+                        </h2>
+                        <span id="files-badge" class="hidden bg-blue-500/20 text-blue-300 text-xs font-bold px-2.5 py-1 rounded-full border border-blue-500/30">
+                            0 archivos
+                        </span>
                     </div>
                     
-                    <div id="file-info" class="hidden mt-4 bg-slate-800/50 rounded-lg p-3 flex items-center justify-between border border-slate-700">
-                        <div class="flex items-center gap-3 overflow-hidden">
-                            <i class="ph ph-file-text text-blue-400 text-xl"></i>
-                            <div class="truncate">
-                                <p id="file-name-display" class="text-sm font-medium text-slate-200 truncate"></p>
-                                <p id="file-pages-display" class="text-xs text-slate-400"></p>
-                            </div>
-                        </div>
-                        <button id="remove-file-btn" class="text-slate-400 hover:text-red-400 transition-colors p-1" title="Quitar archivo">
-                            <i class="ph ph-x-circle text-xl"></i>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center cursor-pointer hover:border-blue-500 hover:bg-blue-500/5 transition-all duration-300 flex flex-col items-center justify-center min-h-[140px]">
+                        <i class="ph ph-upload-simple text-3xl text-slate-400 mb-2 block"></i>
+                        <p class="text-sm text-slate-300 font-medium mb-1">Clic o arrastra PDFs aquí</p>
+                        <p class="text-xs text-slate-500">Puedes seleccionar varios a la vez</p>
+                        <input type="file" id="pdf-upload" accept=".pdf" multiple class="hidden">
+                    </div>
+                    
+                    <!-- File List Display -->
+                    <div id="file-list-container" class="hidden mt-4 flex-1 flex flex-col max-h-[200px]">
+                        <ul id="file-list" class="space-y-2 overflow-y-auto custom-scrollbar pr-1 flex-1">
+                            <!-- Files will be injected here -->
+                        </ul>
+                        <button id="add-more-btn" class="mt-3 w-full py-2 bg-slate-800 hover:bg-slate-700 text-sm text-blue-400 rounded-lg border border-slate-700 transition-colors flex items-center justify-center gap-2">
+                            <i class="ph ph-plus"></i> Agregar más PDFs
                         </button>
                     </div>
                 </div>
 
-                <!-- Settings Panel -->
-                <div class="glass-panel rounded-2xl p-6">
-                    <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
-                        <i class="ph ph-sliders text-purple-400"></i> Configuración de Nombres
+                <div class="glass-panel rounded-2xl p-5 md:p-6">
+                    <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i class="ph ph-sliders text-purple-400 text-xl"></i> Configuración Global
                     </h2>
                     
                     <div class="space-y-4">
-                        <!-- Main Name -->
                         <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Nombre Principal</label>
-                            <input type="text" id="config-main-name" value="documento" placeholder="Ej: factura" class="glass-input w-full rounded-lg px-4 py-2.5 text-sm">
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Nombre Principal</label>
+                            <input type="text" id="config-main-name" value="documento" placeholder="Ej: factura" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
                         </div>
 
-                        <!-- Separator -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Separador</label>
-                            <div class="relative">
-                                <select id="config-separator" class="glass-input w-full rounded-lg px-4 py-2.5 text-sm appearance-none">
-                                    <option value="_">Guion bajo (_)</option>
-                                    <option value="-">Guion medio (-)</option>
-                                    <option value=" ">Espacio ( )</option>
-                                    <option value="custom">Personalizado...</option>
-                                </select>
-                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1.5">Separador</label>
+                                <div class="relative">
+                                    <select id="config-separator" class="glass-input w-full rounded-lg px-3 py-2 text-sm appearance-none cursor-pointer">
+                                        <option value="_">Guion bajo (_)</option>
+                                        <option value="-">Guion medio (-)</option>
+                                        <option value=" ">Espacio ( )</option>
+                                        <option value="custom">Otro...</option>
+                                    </select>
+                                    <i class="ph ph-caret-down absolute right-2.5 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-slate-300 mb-1.5">Formato</label>
+                                <div class="relative">
+                                    <select id="config-extension" class="glass-input w-full rounded-lg px-3 py-2 text-sm appearance-none cursor-pointer">
+                                        <option value="jpeg">JPEG</option>
+                                        <option value="png">PNG</option>
+                                        <option value="webp">WebP</option>
+                                    </select>
+                                    <i class="ph ph-caret-down absolute right-2.5 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Custom Separator (Hidden by default) -->
                         <div id="custom-separator-container" class="hidden">
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Escribe tu separador</label>
-                            <input type="text" id="config-custom-separator" placeholder="Ej: ~" class="glass-input w-full rounded-lg px-4 py-2.5 text-sm">
-                        </div>
-
-                        <!-- Extension -->
-                        <div>
-                            <label class="block text-sm font-medium text-slate-300 mb-1">Formato de Imagen</label>
-                            <div class="relative">
-                                <select id="config-extension" class="glass-input w-full rounded-lg px-4 py-2.5 text-sm appearance-none">
-                                    <option value="jpeg">JPEG (Recomendado)</option>
-                                    <option value="png">PNG (Alta calidad)</option>
-                                    <option value="webp">WebP (Optimizado)</option>
-                                </select>
-                                <i class="ph ph-caret-down absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none"></i>
-                            </div>
+                            <label class="block text-xs font-medium text-slate-300 mb-1.5">Separador Personalizado</label>
+                            <input type="text" id="config-custom-separator" placeholder="Ej: ~" class="glass-input w-full rounded-lg px-3 py-2 text-sm">
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Right Column: Pages List -->
-            <div class="lg:col-span-8 flex flex-col h-[calc(100vh-8rem)] min-h-[500px]">
+            <div class="lg:col-span-8 flex flex-col h-[calc(100vh-9rem)] min-h-[500px]">
                 <div class="glass-panel rounded-2xl p-1 flex-1 flex flex-col overflow-hidden relative">
                     
-                    <!-- Header of List -->
-                    <div class="p-5 border-b border-white/10 flex justify-between items-center bg-slate-900/40 rounded-t-xl">
-                        <h2 class="text-xl font-semibold flex items-center gap-2">
-                            <i class="ph ph-list-numbers text-blue-400"></i> Páginas del PDF
-                        </h2>
-                        <span id="page-count-badge" class="bg-blue-500/20 text-blue-300 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30">
-                            0 páginas
-                        </span>
-                    </div>
-
-                    <!-- Dynamic List Container -->
-                    <div id="pages-list" class="flex-1 overflow-y-auto custom-scrollbar p-5 space-y-3">
-                        <!-- Empty State -->
-                        <div id="empty-state" class="h-full flex flex-col items-center justify-center text-slate-500">
-                            <i class="ph ph-empty text-6xl mb-4 opacity-50"></i>
-                            <p class="text-lg">No hay ningún PDF cargado.</p>
-                            <p class="text-sm">Carga un archivo para comenzar a renombrar.</p>
+                    <div class="p-4 md:p-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/40 rounded-t-xl">
+                        <div>
+                            <h2 class="text-lg font-semibold flex items-center gap-2">
+                                <i class="ph ph-list-numbers text-pink-400 text-xl"></i> Nombres de Páginas
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-0.5" id="max-pages-info">Se detectaron hasta 0 páginas en los documentos.</p>
                         </div>
                     </div>
 
-                    <!-- Footer Actions -->
-                    <div class="p-5 border-t border-white/10 bg-slate-900/60 rounded-b-xl">
-                        <div class="flex items-center justify-between">
-                            <div class="text-sm text-slate-400">
-                                <span id="ready-status">Esperando archivo...</span>
+                    <div id="pages-list" class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-5 space-y-3">
+                        <div id="empty-state" class="h-full flex flex-col items-center justify-center text-slate-500">
+                            <i class="ph ph-file-dashed text-6xl mb-4 opacity-50"></i>
+                            <p class="text-base text-center">No hay PDFs cargados.</p>
+                            <p class="text-xs text-center mt-1">Carga uno o más archivos para configurar los nombres.</p>
+                        </div>
+                    </div>
+
+                    <!-- Process Bar -->
+                    <div class="p-4 md:p-5 border-t border-white/10 bg-slate-900/80 rounded-b-xl backdrop-blur-md">
+                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="text-sm text-slate-300 w-full sm:w-auto">
+                                <div id="ready-status" class="flex items-center gap-2">
+                                    <i class="ph ph-clock text-slate-500"></i> Esperando archivos...
+                                </div>
+                                <!-- Progress Bar (Hidden by default) -->
+                                <div id="progress-container" class="hidden w-full sm:w-48 mt-2 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                    <div id="progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-purple-500 w-0 transition-all duration-300"></div>
+                                </div>
                             </div>
-                            <button id="process-btn" disabled class="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium py-2.5 px-6 rounded-lg shadow-lg shadow-blue-500/20 transition-all flex items-center gap-2">
-                                <i class="ph ph-download-simple text-lg"></i>
-                                <span>Procesar y Descargar</span>
+                            
+                            <button id="process-btn" disabled class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium py-2.5 px-6 rounded-lg shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
+                                <i class="ph ph-file-zip text-lg"></i>
+                                <span>Descargar ZIP</span>
                             </button>
                         </div>
                     </div>
@@ -245,10 +227,11 @@
         // DOM Elements
         const dropZone = document.getElementById('drop-zone');
         const fileInput = document.getElementById('pdf-upload');
-        const fileInfo = document.getElementById('file-info');
-        const fileNameDisplay = document.getElementById('file-name-display');
-        const filePagesDisplay = document.getElementById('file-pages-display');
-        const removeFileBtn = document.getElementById('remove-file-btn');
+        const fileListContainer = document.getElementById('file-list-container');
+        const fileList = document.getElementById('file-list');
+        const filesBadge = document.getElementById('files-badge');
+        const addMoreBtn = document.getElementById('add-more-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
         
         const configMainName = document.getElementById('config-main-name');
         const configSeparator = document.getElementById('config-separator');
@@ -258,21 +241,25 @@
         
         const pagesList = document.getElementById('pages-list');
         const emptyState = document.getElementById('empty-state');
-        const pageCountBadge = document.getElementById('page-count-badge');
+        const maxPagesInfo = document.getElementById('max-pages-info');
         const processBtn = document.getElementById('process-btn');
+        
         const readyStatus = document.getElementById('ready-status');
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
 
-        // State
-        let currentPdf = null;
-        let pdfBytes = null;
-        let totalPages = 0;
+        // Application State
+        let uploadedPdfs = []; // Array of { file: File, pdfDoc: Object, numPages: Number, originalName: String }
+        let maxPages = 0;
+        let cachedSubnames = []; // Stores user inputs to persist across uploads. Index is pageNumber (1-based)
         let isProcessing = false;
 
-        // File Upload Handlers
         dropZone.addEventListener('click', () => fileInput.click());
+        addMoreBtn.addEventListener('click', () => fileInput.click());
 
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false); // Prevent whole page drop
         });
 
         function preventDefaults(e) {
@@ -288,77 +275,157 @@
             dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
         });
 
-        dropZone.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-        });
+        dropZone.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files));
+        fileInput.addEventListener('change', function() { handleFiles(this.files); this.value = ''; }); // clear input
 
-        fileInput.addEventListener('change', function() {
-            handleFiles(this.files);
-        });
-
-        function handleFiles(files) {
+        async function handleFiles(files) {
             if (files.length === 0) return;
-            const file = files[0];
             
-            if (file.type !== 'application/pdf') {
-                alert('Por favor, selecciona un archivo PDF válido.');
+            let addedCount = 0;
+            pagesList.innerHTML = '<div class="flex justify-center items-center h-full text-blue-400"><div class="spinner mr-3"></div> Analizando PDFs...</div>';
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (file.type !== 'application/pdf') continue;
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const typedarray = new Uint8Array(arrayBuffer);
+                    const pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
+                    
+                    // Remove extension for the original name reference
+                    const originalName = file.name.replace(/\.[^/.]+$/, "");
+                    
+                    uploadedPdfs.push({
+                        file: file,
+                        pdfDoc: pdfDoc,
+                        numPages: pdfDoc.numPages,
+                        originalName: originalName,
+                        id: Date.now() + i // unique ID for list rendering
+                    });
+                    addedCount++;
+                } catch (error) {
+                    console.error(`Error loading ${file.name}:`, error);
+                }
+            }
+
+            if (addedCount > 0) {
+                updateFileUI();
+                recalculateMaxPagesAndRender();
+            } else if (uploadedPdfs.length === 0) {
+                renderEmptyState();
+            }
+        }
+
+        function updateFileUI() {
+            if (uploadedPdfs.length === 0) {
+                dropZone.classList.remove('hidden');
+                fileListContainer.classList.add('hidden');
+                filesBadge.classList.add('hidden');
                 return;
             }
 
-            fileNameDisplay.textContent = file.name;
             dropZone.classList.add('hidden');
-            fileInfo.classList.remove('hidden');
-            pagesList.innerHTML = '<div class="flex justify-center items-center h-full text-blue-400"><div class="spinner mr-3"></div> Analizando PDF...</div>';
+            fileListContainer.classList.remove('hidden');
+            filesBadge.classList.remove('hidden');
+            filesBadge.textContent = `${uploadedPdfs.length} archivo(s)`;
 
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const typedarray = new Uint8Array(e.target.result);
-                pdfBytes = typedarray;
-                
-                try {
-                    currentPdf = await pdfjsLib.getDocument(typedarray).promise;
-                    totalPages = currentPdf.numPages;
-                    filePagesDisplay.textContent = `${totalPages} página(s)`;
-                    pageCountBadge.textContent = `${totalPages} página(s)`;
-                    
-                    renderPageInputs();
-                    updateAllPreviews();
-                    
-                    processBtn.disabled = false;
-                    readyStatus.innerHTML = `<span class="text-green-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> Listo para procesar</span>`;
-                } catch (error) {
-                    console.error('Error loading PDF:', error);
-                    pagesList.innerHTML = `<div class="text-red-400 text-center p-4">Error al leer el PDF. Asegúrate de que no esté corrupto o protegido con contraseña.</div>`;
-                    resetState();
-                }
-            };
-            reader.readAsArrayBuffer(file);
+            fileList.innerHTML = '';
+            uploadedPdfs.forEach((pdfObj, index) => {
+                const li = document.createElement('li');
+                li.className = 'bg-slate-800/80 rounded-lg p-2.5 flex items-center justify-between border border-slate-700/50';
+                li.innerHTML = `
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <i class="ph ph-file-pdf text-red-400 text-lg flex-shrink-0"></i>
+                        <div class="truncate">
+                            <p class="text-xs font-medium text-slate-200 truncate" title="${pdfObj.file.name}">${pdfObj.file.name}</p>
+                            <p class="text-[10px] text-slate-400">${pdfObj.numPages} pág(s)</p>
+                        </div>
+                    </div>
+                    <button onclick="removePdf('${pdfObj.id}')" class="text-slate-500 hover:text-red-400 p-1 transition-colors flex-shrink-0" title="Quitar">
+                        <i class="ph ph-x"></i>
+                    </button>
+                `;
+                fileList.appendChild(li);
+            });
         }
 
-        removeFileBtn.addEventListener('click', () => {
-            resetState();
-        });
+        window.removePdf = (id) => {
+            uploadedPdfs = uploadedPdfs.filter(pdf => pdf.id != id);
+            updateFileUI();
+            if (uploadedPdfs.length === 0) {
+                renderEmptyState();
+            } else {
+                recalculateMaxPagesAndRender();
+            }
+        };
 
-        function resetState() {
-            currentPdf = null;
-            pdfBytes = null;
-            totalPages = 0;
-            fileInput.value = '';
-            
-            dropZone.classList.remove('hidden');
-            fileInfo.classList.add('hidden');
-            
+        function renderEmptyState() {
             pagesList.innerHTML = '';
             pagesList.appendChild(emptyState);
-            pageCountBadge.textContent = '0 páginas';
-            
+            maxPagesInfo.textContent = 'Se detectaron hasta 0 páginas en los documentos.';
             processBtn.disabled = true;
-            readyStatus.textContent = 'Esperando archivo...';
+            readyStatus.innerHTML = `<i class="ph ph-clock text-slate-500"></i> Esperando archivos...`;
+            maxPages = 0;
         }
 
-        // Configuration Listeners
+        function recalculateMaxPagesAndRender() {
+            let newMax = 0;
+            uploadedPdfs.forEach(pdf => {
+                if (pdf.numPages > newMax) newMax = pdf.numPages;
+            });
+            maxPages = newMax;
+            
+            maxPagesInfo.textContent = `Máximo de páginas detectadas: ${maxPages}`;
+            
+            renderPageInputs();
+            updateAllPreviews();
+            
+            processBtn.disabled = false;
+            readyStatus.innerHTML = `<span class="text-green-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> Listo para procesar ${uploadedPdfs.length} PDF(s)</span>`;
+        }
+
+        function renderPageInputs() {
+            pagesList.innerHTML = '';
+            
+            for (let i = 1; i <= maxPages; i++) {
+                // Pre-fill with cached value if exists, else default to 'i'
+                const defaultValue = cachedSubnames[i] !== undefined ? cachedSubnames[i] : i;
+                
+                const card = document.createElement('div');
+                card.className = 'bg-slate-800/60 border border-slate-700/50 rounded-xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 hover:bg-slate-800 transition-colors';
+                
+                card.innerHTML = `
+                    <div class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-slate-700 rounded-lg flex items-center justify-center font-bold text-base sm:text-lg text-slate-300">
+                        ${i}
+                    </div>
+                    
+                    <div class="flex-1 space-y-1">
+                        <label class="block text-[10px] sm:text-xs font-medium text-slate-400 uppercase tracking-wide">Sub-nombre Hoja ${i}</label>
+                        <input type="text" id="subname-${i}" data-page="${i}" value="${defaultValue}" placeholder="Ej: pagina-${i}" class="glass-input w-full rounded-md px-3 py-1.5 text-sm subname-input">
+                    </div>
+                    
+                    <div class="flex-1 sm:text-right bg-slate-900/50 p-2 sm:p-3 rounded-lg border border-slate-700/30 overflow-hidden">
+                        <div class="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-wider mb-1">Previsualización (Patrón)</div>
+                        <div class="text-xs sm:text-sm font-mono text-blue-300 truncate" id="preview-${i}">
+                            ...
+                        </div>
+                    </div>
+                `;
+                
+                pagesList.appendChild(card);
+                
+                // Save to cache on input
+                const input = card.querySelector(`#subname-${i}`);
+                input.addEventListener('input', (e) => {
+                    cachedSubnames[i] = e.target.value;
+                    updatePreview(i);
+                });
+                // Ensure initial cache is set
+                cachedSubnames[i] = defaultValue;
+            }
+        }
+
         configSeparator.addEventListener('change', (e) => {
             if (e.target.value === 'custom') {
                 customSeparatorContainer.classList.remove('hidden');
@@ -374,146 +441,156 @@
 
         function getActiveSeparator() {
             const sep = configSeparator.value;
-            if (sep === 'custom') {
-                return configCustomSeparator.value;
-            }
-            return sep;
-        }
-
-        function renderPageInputs() {
-            pagesList.innerHTML = '';
-            
-            for (let i = 1; i <= totalPages; i++) {
-                const card = document.createElement('div');
-                card.className = 'bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 hover:bg-slate-800 transition-colors';
-                
-                card.innerHTML = `
-                    <div class="flex-shrink-0 w-12 h-12 bg-slate-700 rounded-lg flex items-center justify-center font-bold text-lg text-slate-300">
-                        ${i}
-                    </div>
-                    
-                    <div class="flex-1 space-y-1">
-                        <label class="block text-xs font-medium text-slate-400">Sub-nombre para página ${i}</label>
-                        <input type="text" id="subname-${i}" value="${i}" placeholder="Ej: pagina-${i}" class="glass-input w-full rounded-md px-3 py-1.5 text-sm subname-input">
-                    </div>
-                    
-                    <div class="flex-1 md:text-right bg-slate-900/50 p-3 rounded-lg border border-slate-700/30 overflow-hidden">
-                        <div class="text-[10px] text-slate-500 uppercase tracking-wider mb-1">Previsualización de archivo</div>
-                        <div class="text-sm font-mono text-blue-300 truncate" id="preview-${i}" title="preview">
-                            ...
-                        </div>
-                    </div>
-                `;
-                
-                pagesList.appendChild(card);
-                
-                // Add listener to specific input
-                const input = card.querySelector(`#subname-${i}`);
-                input.addEventListener('input', () => updatePreview(i));
-            }
+            return sep === 'custom' ? configCustomSeparator.value : sep;
         }
 
         function updatePreview(pageIndex) {
-            const mainName = configMainName.value.trim() || 'documento';
+            const mainName = configMainName.value.trim();
             const separator = getActiveSeparator();
             const ext = configExtension.value;
             
             const subNameInput = document.getElementById(`subname-${pageIndex}`);
             if (!subNameInput) return;
             
-            const subName = subNameInput.value.trim() || pageIndex;
+            const subName = subNameInput.value.trim();
             const previewEl = document.getElementById(`preview-${pageIndex}`);
             
-            const fileName = `${mainName}${separator}${subName}.${ext}`;
+            // Pattern showing how it will look. "Archivo1" is just an example for the preview.
+            const fileName = `${mainName}${separator}${subName} - Archivo1.${ext}`;
             previewEl.textContent = fileName;
-            previewEl.title = fileName; // Tooltip for overflow
+            previewEl.title = fileName; 
         }
 
         function updateAllPreviews() {
-            if (totalPages === 0) return;
-            for (let i = 1; i <= totalPages; i++) {
+            if (maxPages === 0) return;
+            for (let i = 1; i <= maxPages; i++) {
                 updatePreview(i);
             }
         }
 
-        // Delay helper to prevent browser from blocking multiple downloads
-        const delay = ms => new Promise(res => setTimeout(res, ms));
+        clearAllBtn.addEventListener('click', () => {
+            // Reset Arrays
+            uploadedPdfs = [];
+            cachedSubnames = [];
+            maxPages = 0;
+            
+            // Reset Inputs
+            configMainName.value = 'documento';
+            configSeparator.value = '_';
+            configCustomSeparator.value = '';
+            configExtension.value = 'jpeg';
+            customSeparatorContainer.classList.add('hidden');
+            
+            // Reset UI
+            updateFileUI();
+            renderEmptyState();
+        });
+
+        const getCanvasBlob = (canvas, mimeType, quality) => {
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => resolve(blob), mimeType, quality);
+            });
+        };
 
         processBtn.addEventListener('click', async () => {
-            if (!currentPdf || isProcessing) return;
+            if (uploadedPdfs.length === 0 || isProcessing) return;
             
             isProcessing = true;
             processBtn.disabled = true;
             const originalBtnContent = processBtn.innerHTML;
             
+            // Setup UI for processing
+            progressContainer.classList.remove('hidden');
+            readyStatus.innerHTML = `<span class="text-blue-400">Generando ZIP...</span>`;
+            progressBar.style.width = '0%';
+            
             try {
-                const mainName = configMainName.value.trim() || 'documento';
+                const zip = new JSZip();
+                const mainName = configMainName.value.trim();
                 const separator = getActiveSeparator();
                 const ext = configExtension.value;
                 const mimeType = ext === 'png' ? 'image/png' : (ext === 'webp' ? 'image/webp' : 'image/jpeg');
                 
-                for (let i = 1; i <= totalPages; i++) {
-                    // Update UI Progress
-                    processBtn.innerHTML = `<div class="spinner"></div><span>Procesando ${i} de ${totalPages}...</span>`;
+                let totalTasks = 0;
+                uploadedPdfs.forEach(pdf => totalTasks += pdf.numPages);
+                let completedTasks = 0;
+
+                for (let pdfIndex = 0; pdfIndex < uploadedPdfs.length; pdfIndex++) {
+                    const currentItem = uploadedPdfs[pdfIndex];
+                    const doc = currentItem.pdfDoc;
+                    const fileNum = pdfIndex + 1; // 1-based index for naming
                     
-                    const subName = document.getElementById(`subname-${i}`).value.trim() || i;
-                    const fileName = `${mainName}${separator}${subName}.${ext}`;
+                    // Inside the zip, maybe create a folder per PDF? Or just dump all with unique names?
+                    // Prompt asks for: [Nombre Principal][Separador][Sub-nombre de la hoja] - Archivo[Index del PDF].[ext]
                     
-                    // Render page to Canvas
-                    const page = await currentPdf.getPage(i);
-                    const viewport = page.getViewport({ scale: 2.0 }); // Scale 2.0 for better quality
-                    
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    
-                    // Crucial: Fill background with white for JPEG, otherwise transparent becomes black
-                    if (ext === 'jpeg') {
-                        ctx.fillStyle = '#ffffff';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+                        processBtn.innerHTML = `<div class="spinner"></div><span>Archivo ${fileNum}, Pág ${pageNum}...</span>`;
+                        
+                        // Get Subname from cache (fallback to pageNum if empty)
+                        let subName = cachedSubnames[pageNum];
+                        if (subName === undefined || subName.trim() === '') subName = pageNum;
+                        
+                        // Construct file name based on requirements
+                        const fileName = `${mainName}${separator}${subName} - Archivo${fileNum}.${ext}`;
+                        
+                        // Render Page
+                        const page = await doc.getPage(pageNum);
+                        const viewport = page.getViewport({ scale: 2.0 }); // High quality
+                        
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d', { alpha: false }); // Optimization
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        
+                        // Ensure background is white for JPEG
+                        if (ext === 'jpeg') {
+                            ctx.fillStyle = '#ffffff';
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        }
+                        
+                        await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+                        
+                        // Convert to Blob
+                        const blob = await getCanvasBlob(canvas, mimeType, 0.9);
+                        
+                        // Add to Zip
+                        zip.file(fileName, blob);
+                        
+                        // Update Progress
+                        completedTasks++;
+                        const progressPercent = (completedTasks / totalTasks) * 100;
+                        progressBar.style.width = `${progressPercent}%`;
+                        
+                        // Release page resources
+                        page.cleanup();
                     }
-                    
-                    const renderContext = {
-                        canvasContext: ctx,
-                        viewport: viewport
-                    };
-                    
-                    await page.render(renderContext).promise;
-                    
-                    // Convert to Data URL
-                    const dataUrl = canvas.toDataURL(mimeType, 0.9); // 0.9 quality
-                    
-                    // Trigger Download
-                    triggerDownload(dataUrl, fileName);
-                    
-                    // Small delay to allow browser to process downloads without blocking
-                    await delay(400); 
                 }
                 
-                readyStatus.innerHTML = `<span class="text-green-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> ¡Descargas completadas!</span>`;
-                setTimeout(() => {
-                    readyStatus.innerHTML = `<span class="text-green-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> Listo para procesar</span>`;
-                }, 3000);
-
+                processBtn.innerHTML = `<div class="spinner"></div><span>Empaquetando...</span>`;
+                
+                // Generate and download ZIP
+                const zipContent = await zip.generateAsync({ type: "blob" });
+                saveAs(zipContent, `${mainName || 'imagenes'}_exportadas.zip`);
+                
+                // Success State
+                readyStatus.innerHTML = `<span class="text-green-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> ¡ZIP Descargado con Éxito!</span>`;
+                
             } catch (error) {
                 console.error("Error during processing:", error);
-                alert("Ocurrió un error al procesar las imágenes. Revisa la consola para más detalles.");
+                alert("Ocurrió un error al procesar las imágenes. Intenta recargar la página o cargar archivos más pequeños.");
+                readyStatus.innerHTML = `<span class="text-red-400 flex items-center gap-1"><i class="ph ph-warning-circle"></i> Error en el proceso</span>`;
             } finally {
+                // Restore UI
                 isProcessing = false;
                 processBtn.disabled = false;
                 processBtn.innerHTML = originalBtnContent;
+                setTimeout(() => {
+                    progressContainer.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                    readyStatus.innerHTML = `<span class="text-green-400 flex items-center gap-1"><i class="ph ph-check-circle"></i> Listo para procesar ${uploadedPdfs.length} PDF(s)</span>`;
+                }, 3000);
             }
         });
-
-        function triggerDownload(dataUrl, filename) {
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
 
     </script>
 </body>
